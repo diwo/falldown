@@ -2,7 +2,7 @@
 
 'use strict';
 
-Falldown.Renderer = function() {
+Falldown.Renderer = function(canvas) {
   this.context = null;
 
   this.viewport = {
@@ -11,12 +11,11 @@ Falldown.Renderer = function() {
   };
   this.devicePixelRatio = null;
 
-  this.init();
+  this.init(canvas);
 };
 
 Falldown.Renderer.prototype = {
-  init: function() {
-    var canvas = document.getElementById('canvas');
+  init: function(canvas) {
     this.context = canvas.getContext('2d');
 
     window.addEventListener('resize', this.resize.bind(this), false);
@@ -42,11 +41,22 @@ Falldown.Renderer.prototype = {
     this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
   },
 
+  drawFrame: function(gameState) {
+    // TODO: refactor drawing code to separate from data
+    if (gameState.state === Falldown.GameState.State.TITLE) {
+      this.drawTitle();
+    } else if (gameState.state === Falldown.GameState.State.PLAYING) {
+      this.drawPlaying(gameState);
+    } else if (gameState.state === Falldown.GameState.State.PAUSED) {
+      this.drawPaused(gameState);
+    }
+  },
+
   drawTitle: function() {
     var renderer = this;
     var ctx = renderer.context;
 
-    // TODO: need to extract data out of rendering code
+    this.clearScreen();
 
     (function colorBackground() {
       ctx.save();
@@ -86,7 +96,11 @@ Falldown.Renderer.prototype = {
     })();
   },
 
-  drawPause: function() {},
+  drawPlaying: function(/* gameState */) {
+    this.clearScreen();
+  },
 
-  drawFrame: function() {}
+  drawPaused: function(/* gameState */) {
+    this.clearScreen();
+  }
 };
