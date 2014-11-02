@@ -26,7 +26,10 @@ Falldown.Renderer.prototype = {
   resize: function() {
     this.viewport.width = window.innerWidth;
     this.viewport.height = window.innerHeight;
-    this.devicePixelRatio = window.devicePixelRatio || 1;
+
+    // Disabled due to huge fps drop on mobile
+    // this.devicePixelRatio = window.devicePixelRatio || 1;
+    this.devicePixelRatio = 1;
 
     this.context.canvas.width = this.viewport.width * this.devicePixelRatio;
     this.context.canvas.height = this.viewport.height * this.devicePixelRatio;
@@ -50,6 +53,17 @@ Falldown.Renderer.prototype = {
     } else if (gameState.state === Falldown.GameState.State.PAUSED) {
       this.drawPaused(gameState);
     }
+
+    this.drawFps(gameState.fps);
+  },
+
+  drawFps: function(fps) {
+    var ctx = this.context;
+    ctx.save();
+    ctx.font = '16pt Arial';
+    ctx.textBaseline = 'top';
+    ctx.fillText('FPS: ' + Math.round(fps), 0, 0);
+    ctx.restore();
   },
 
   drawTitle: function() {
