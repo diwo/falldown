@@ -120,11 +120,45 @@ Falldown.Renderer.prototype = {
       ctx.save();
       ctx.fillStyle = '#5984CF';
       ctx.lineWidth = 5;
-      for (var i=0; i<gameState.platforms.length; i++) {
-        var platform = gameState.platforms[i];
+      for (var platformIndex=0; platformIndex<gameState.platforms.length; platformIndex++) {
+        var platform = gameState.platforms[platformIndex];
         var ypos = renderer.viewport.height * platform.ypos;
-        ctx.fillRect(0, ypos, renderer.viewport.width, renderer.viewport.height * 0.02);
-        ctx.strokeRect(0, ypos, renderer.viewport.width, renderer.viewport.height * 0.02);
+
+        var platformChunks = (function(gaps) {
+          var chunks = [];
+          var start = 0;
+
+          for (var gapIndex=0; gapIndex<gaps.length; gapIndex++) {
+            var gap = gaps[gapIndex];
+            if (start < gap.start) {
+              chunks.push({
+                start: start,
+                end: gap.start
+              });
+            }
+            start = gap.end;
+          }
+
+          if (start < 1) {
+            chunks.push({
+              start: start,
+              end: 1
+            });
+          }
+
+          return chunks;
+        })(platform.gaps);
+
+        for (var chunkIndex=0; chunkIndex<platformChunks.length; chunkIndex++) {
+          var chunk = platformChunks[chunkIndex];
+          var x = renderer.viewport.width * chunk.start;
+          var y = ypos;
+          var width = renderer.viewport.width * (chunk.end - chunk.start);
+          var height = renderer.viewport.height * 0.02;
+
+          ctx.fillRect(x, y, width, height);
+          ctx.strokeRect(x, y, width, height);
+        }
       }
       ctx.restore();
     })();

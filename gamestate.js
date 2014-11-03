@@ -52,7 +52,7 @@ Falldown.GameState.prototype = {
 
       // TODO: refactor this number
       // fraction of screen height per second
-      var platformSpeed = 0.25;
+      var platformSpeed = 0.3;
 
       // move existing platforms up
       platform.ypos -= platformSpeed * deltaTime / 1000;
@@ -69,7 +69,7 @@ Falldown.GameState.prototype = {
     // create new platform
     // TODO: refactor this number
     // fraction of screen height
-    var spaceBetweenPlatforms = 0.33;
+    var spaceBetweenPlatforms = 0.25;
     if (!this.bottomPlatform || this.bottomPlatform.ypos + spaceBetweenPlatforms < 1) {
       var newPlatform = this.generatePlatform();
       this.platforms.push(newPlatform);
@@ -82,6 +82,34 @@ Falldown.GameState.prototype = {
       ypos: 1.0,
       gaps: []
     };
+
+    // TODO: refactor magic numbers
+    var platformQuantizationSize = 8;
+    var minNumberOfGaps = 1;
+    var maxNumberOfGaps = 3;
+    var numberOfGaps = Math.floor(Math.random() * (maxNumberOfGaps - minNumberOfGaps)) + minNumberOfGaps;
+
+    var chunks = Array.apply(null, new Array(platformQuantizationSize)).map(function(_, i) { return i; });
+    while (chunks.length > numberOfGaps) {
+      chunks.splice(Math.floor(Math.random() * chunks.length), 1);
+    }
+
+    while (chunks.length) {
+      var chunk = chunks.shift();
+      var gap = {
+        start: chunk/platformQuantizationSize,
+        end: (chunk + 1)/platformQuantizationSize
+      };
+      while (chunks[0] === chunk + 1) {
+        chunk = chunks.shift();
+        gap.end += 1/platformQuantizationSize;
+      }
+      if (chunk === platformQuantizationSize - 1) {
+        gap.end = 1.0;
+      }
+      platform.gaps.push(gap);
+    }
+
     return platform;
   },
 
