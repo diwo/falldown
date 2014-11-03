@@ -70,7 +70,7 @@ Falldown.Renderer.prototype = {
     var renderer = this;
     var ctx = renderer.context;
 
-    this.clearScreen();
+    renderer.clearScreen();
 
     (function colorBackground() {
       ctx.save();
@@ -110,8 +110,24 @@ Falldown.Renderer.prototype = {
     })();
   },
 
-  drawPlaying: function(/* gameState */) {
-    this.clearScreen();
+  drawPlaying: function(gameState) {
+    var renderer = this;
+    var ctx = renderer.context;
+
+    renderer.clearScreen();
+
+    (function drawPlatforms() {
+      ctx.save();
+      ctx.fillStyle = '#5984CF';
+      ctx.lineWidth = 5;
+      for (var i=0; i<gameState.platforms.length; i++) {
+        var platform = gameState.platforms[i];
+        var ypos = renderer.viewport.height * platform.ypos;
+        ctx.fillRect(0, ypos, renderer.viewport.width, renderer.viewport.height * 0.02);
+        ctx.strokeRect(0, ypos, renderer.viewport.width, renderer.viewport.height * 0.02);
+      }
+      ctx.restore();
+    })();
   },
 
   drawPaused: function(/* gameState */) {
