@@ -57,6 +57,10 @@ Falldown.GameState.prototype = {
   updateGame: function(deltaTime, inputData) {
     this.updatePlatforms(deltaTime);
     this.moveBall(deltaTime, inputData);
+
+    if (this.ball.platform && this.isBallOnGap(this.ball, this.ball.platform)) {
+      this.ball.platform = null;
+    }
   },
 
   updatePlatforms: function(deltaTime) {
@@ -66,12 +70,12 @@ Falldown.GameState.prototype = {
 
       // TODO: refactor this number
       // fraction of screen height per second
-      var platformSpeed = 0.3;
+      var platformSpeed = 0.4;
 
       // move existing platforms up
       var newYpos = platform.ypos - platformSpeed * deltaTime / 1000;
       // check if moving pass the ball
-      if (newYpos <= this.ball.y && this.ball.y < platform.ypos) {
+      if (newYpos <= this.ball.y && this.ball.y < platform.ypos && !this.isBallOnGap(this.ball, platform)) {
         this.ball.platform = platform;
         this.ball.y = newYpos;
         this.ball.vy = 0;
@@ -95,7 +99,7 @@ Falldown.GameState.prototype = {
       var newPlatform = this.generatePlatform();
       this.platforms.push(newPlatform);
       this.bottomPlatform = newPlatform;
-      if (!this.ball.platform && this.ball.y === 1) {
+      if (!this.ball.platform && this.ball.y === 1 && !this.isBallOnGap(this.ball, newPlatform)) {
         this.ball.platform = newPlatform;
       }
     }
@@ -144,7 +148,7 @@ Falldown.GameState.prototype = {
     // fraction of screen height per second per second
     var gravity = vterm / 0.2;
     var reverseMultiplier = 2;
-    var maxAngle = Math.PI/4;
+    var maxAngle = Math.PI/3;
 
     // derive x/y acceleration components from tilt input
     var tiltRadian = (inputData.tilt || 0) * maxAngle;
@@ -195,7 +199,12 @@ Falldown.GameState.prototype = {
         }
       }
 
-      if (closestCrossoverPlatform) {
+      // TODO: ugly ugly ugly fixme!
+      var tmpBall = {
+        x: x,
+        radius: this.ball.radius
+      };
+      if (closestCrossoverPlatform && !this.isBallOnGap(tmpBall, closestCrossoverPlatform)) {
         y = closestCrossoverPlatform.ypos;
         vy = 0;
         this.ball.platform = closestCrossoverPlatform;
@@ -209,6 +218,20 @@ Falldown.GameState.prototype = {
     this.ball.y = y;
     this.ball.vx = vx;
     this.ball.vy = vy;
+  },
+
+  isBallOnGap: function(ball, platform) {
+    var ballMinX = ball.x - ball.radius;
+    var ballMaxX = ball.x + ball.radius;
+
+    var gaps = platform.gaps;
+    for (var gapIndex=0; gapIndex<gaps.length; gapIndex++) {
+      var gap = gaps[gapIndex];
+      if (gap.start <= ballMinX && ballMaxX <= gap.end) {
+        return true;
+      }
+    }
+    return false;
   }
 };
 

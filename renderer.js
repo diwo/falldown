@@ -54,7 +54,11 @@ Falldown.Renderer.prototype = {
       this.drawGameover();
     }
 
-    this.drawFps(gameState.fps);
+    // TODO: refactor globals
+    var drawFps = false;
+    if (drawFps) {
+      this.drawFps(gameState.fps);
+    }
   },
 
   drawFps: function(fps) {
@@ -75,7 +79,7 @@ Falldown.Renderer.prototype = {
     (function colorBackground() {
       ctx.save();
 
-      ctx.fillStyle = '#FFFFCC';
+      ctx.fillStyle = '#BDE8BC';
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
       ctx.restore();
@@ -115,6 +119,15 @@ Falldown.Renderer.prototype = {
     var ctx = renderer.context;
 
     renderer.clearScreen();
+
+    (function colorBackground() {
+      ctx.save();
+
+      ctx.fillStyle = '#BDE8BC';
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      ctx.restore();
+    })();
 
     (function drawPlatforms() {
       ctx.save();
@@ -185,6 +198,15 @@ Falldown.Renderer.prototype = {
     var ctx = renderer.context;
 
     this.clearScreen();
+
+    (function colorBackground() {
+      ctx.save();
+
+      ctx.fillStyle = '#E8CDBC';
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      ctx.restore();
+    })();
 
     (function drawGameover() {
       ctx.save();
