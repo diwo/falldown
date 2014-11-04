@@ -15,7 +15,7 @@ Falldown.Input.prototype = {
 
     window.addEventListener('deviceorientation', function(event) {
       // TODO: refactor magic number
-      var maxTilt = 45;
+      var maxTilt = 30;
       input.tilt = Math.min(maxTilt, Math.abs(event.gamma)) * (event.gamma > 0 ? 1 : -1) / maxTilt;
     }, false);
 

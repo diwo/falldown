@@ -6,7 +6,6 @@ Falldown.GameState = function() {
   this.state = null;
   this.fps = null;
   this.platforms = null;
-  this.topPlatform = null;
   this.bottomPlatform = null;
   this.ball = null;
 
@@ -70,7 +69,14 @@ Falldown.GameState.prototype = {
       var platformSpeed = 0.3;
 
       // move existing platforms up
-      platform.ypos -= platformSpeed * deltaTime / 1000;
+      var newYpos = platform.ypos - platformSpeed * deltaTime / 1000;
+      // check if moving pass the ball
+      if (newYpos <= this.ball.y && this.ball.y < platform.ypos) {
+        this.ball.platform = platform;
+        this.ball.y = newYpos;
+        this.ball.vy = 0;
+      }
+      platform.ypos = newYpos;
 
       // delete old platforms
       if (platform.ypos < -0.05) {
@@ -89,6 +95,9 @@ Falldown.GameState.prototype = {
       var newPlatform = this.generatePlatform();
       this.platforms.push(newPlatform);
       this.bottomPlatform = newPlatform;
+      if (!this.ball.platform && this.ball.y === 1) {
+        this.ball.platform = newPlatform;
+      }
     }
   },
 
@@ -133,8 +142,8 @@ Falldown.GameState.prototype = {
     // fraction of screen height per second
     var vterm = 1.2;
     // fraction of screen height per second per second
-    var gravity = vterm / 0.3;
-    var reverseMultiplier = 3;
+    var gravity = vterm / 0.2;
+    var reverseMultiplier = 2;
     var maxAngle = Math.PI/4;
 
     // derive x/y acceleration components from tilt input
@@ -172,10 +181,25 @@ Falldown.GameState.prototype = {
     // raise ball with platform if it's on one
     if (this.ball.platform) {
       y = this.ball.platform.ypos;
-      vy = 0;
     } else {
       y = this.ball.y + vy * deltaTime/1000;
-      if (y > 1) {
+
+      // check if landing on a platform
+      var closestCrossoverPlatform = null;
+      for (var platformIndex=0; platformIndex<this.platforms.length; platformIndex++) {
+        var platform = this.platforms[platformIndex];
+        if (this.ball.y < platform.ypos && platform.ypos <= y) {
+          if (!closestCrossoverPlatform || platform.ypos < closestCrossoverPlatform) {
+            closestCrossoverPlatform = platform;
+          }
+        }
+      }
+
+      if (closestCrossoverPlatform) {
+        y = closestCrossoverPlatform.ypos;
+        vy = 0;
+        this.ball.platform = closestCrossoverPlatform;
+      } else if (y > 1) {
         y = 1;
         vy = 0;
       }
