@@ -51,7 +51,7 @@ Falldown.Renderer.prototype = {
     } else if (gameState.state === Falldown.GameState.State.PLAYING) {
       this.drawPlaying(gameState);
     } else if (gameState.state === Falldown.GameState.State.GAMEOVER) {
-      this.drawGameover();
+      this.drawGameover(gameState);
     }
 
     // TODO: refactor globals
@@ -65,8 +65,9 @@ Falldown.Renderer.prototype = {
     var ctx = this.context;
     ctx.save();
     ctx.font = '16pt Arial';
+    ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
-    ctx.fillText('FPS: ' + Math.round(fps), 0, 0);
+    ctx.fillText('FPS: ' + Math.round(fps), this.viewport.width, 0);
     ctx.restore();
   },
 
@@ -104,7 +105,7 @@ Falldown.Renderer.prototype = {
       ctx.save();
 
       ctx.font = '24pt Arial';
-      ctx.fillStyle = 'black';
+      ctx.fillStyle = '#E36729';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
@@ -191,9 +192,18 @@ Falldown.Renderer.prototype = {
 
       ctx.restore();
     })();
+
+    (function drawScore() {
+      ctx.save();
+      ctx.font = '24pt Arial';
+      ctx.fillStyle = '#E36729';
+      ctx.textBaseline = 'top';
+      ctx.fillText('Score: ' + gameState.platformPassed, 0, 0);
+      ctx.restore();
+    })();
   },
 
-  drawGameover: function() {
+  drawGameover: function(gameState) {
     var renderer = this;
     var ctx = renderer.context;
 
@@ -227,12 +237,25 @@ Falldown.Renderer.prototype = {
     (function drawTaunt() {
       ctx.save();
 
+      ctx.font = '36pt Arial';
+      ctx.fillStyle = '#A67A2E';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      ctx.fillText('Score: ' + gameState.platformPassed, renderer.viewport.width/2, renderer.viewport.height/3 + 20);
+
+      ctx.restore();
+    })();
+
+    (function drawTaunt() {
+      ctx.save();
+
       ctx.font = '24pt Arial';
       ctx.fillStyle = 'black';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
-      ctx.fillText('You suck', renderer.viewport.width/2, renderer.viewport.height/3 + 20);
+      ctx.fillText('You suck', renderer.viewport.width/2, renderer.viewport.height/3 + 100);
 
       ctx.restore();
     })();

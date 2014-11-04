@@ -8,6 +8,7 @@ Falldown.GameState = function() {
   this.platforms = null;
   this.bottomPlatform = null;
   this.ball = null;
+  this.platformPassed = null;
 
   this.reset();
 };
@@ -17,7 +18,6 @@ Falldown.GameState.prototype = {
     this.state = Falldown.GameState.State.TITLE;
     this.fps = 0;
     this.platforms = [];
-    this.topPlatform = null;
     this.bottomPlatform = null;
     this.ball = {
       x: 0.5,  // x center
@@ -27,6 +27,7 @@ Falldown.GameState.prototype = {
       radius: 1/30,
       platform: null
     };
+    this.platformPassed = 0;
   },
 
   update: function(deltaTime, inputData) {
@@ -60,6 +61,7 @@ Falldown.GameState.prototype = {
 
     if (this.ball.platform && this.isBallOnGap(this.ball, this.ball.platform)) {
       this.ball.platform = null;
+      this.platformPassed += 1;
     }
   },
 
@@ -70,15 +72,20 @@ Falldown.GameState.prototype = {
 
       // TODO: refactor this number
       // fraction of screen height per second
-      var platformSpeed = 0.4;
+      var platformSpeed = 0.3;
+      platformSpeed += 0.1 * this.platformPassed/50;
 
       // move existing platforms up
       var newYpos = platform.ypos - platformSpeed * deltaTime / 1000;
       // check if moving pass the ball
-      if (newYpos <= this.ball.y && this.ball.y < platform.ypos && !this.isBallOnGap(this.ball, platform)) {
-        this.ball.platform = platform;
-        this.ball.y = newYpos;
-        this.ball.vy = 0;
+      if (newYpos <= this.ball.y && this.ball.y < platform.ypos) {
+        if (this.isBallOnGap(this.ball, platform)) {
+          this.platformPassed += 1;
+        } else {
+          this.ball.platform = platform;
+          this.ball.y = newYpos;
+          this.ball.vy = 0;
+        }
       }
       platform.ypos = newYpos;
 
@@ -95,12 +102,18 @@ Falldown.GameState.prototype = {
     // TODO: refactor this number
     // fraction of screen height
     var spaceBetweenPlatforms = 0.25;
+    spaceBetweenPlatforms -= 0.02 * this.platformPassed / 50;
+
     if (!this.bottomPlatform || this.bottomPlatform.ypos + spaceBetweenPlatforms < 1) {
       var newPlatform = this.generatePlatform();
       this.platforms.push(newPlatform);
       this.bottomPlatform = newPlatform;
-      if (!this.ball.platform && this.ball.y === 1 && !this.isBallOnGap(this.ball, newPlatform)) {
-        this.ball.platform = newPlatform;
+      if (!this.ball.platform && this.ball.y === 1) {
+        if (this.isBallOnGap(this.ball, newPlatform)) {
+          this.platformPassed += 1;
+        } else {
+          this.ball.platform = newPlatform;
+        }
       }
     }
   },
@@ -144,7 +157,7 @@ Falldown.GameState.prototype = {
   moveBall: function(deltaTime, inputData) {
     // TODO: refactor magic numbers
     // fraction of screen height per second
-    var vterm = 1.2;
+    var vterm = 1.5;
     // fraction of screen height per second per second
     var gravity = vterm / 0.2;
     var reverseMultiplier = 2;
@@ -199,15 +212,19 @@ Falldown.GameState.prototype = {
         }
       }
 
-      // TODO: ugly ugly ugly fixme!
-      var tmpBall = {
-        x: x,
-        radius: this.ball.radius
-      };
-      if (closestCrossoverPlatform && !this.isBallOnGap(tmpBall, closestCrossoverPlatform)) {
-        y = closestCrossoverPlatform.ypos;
-        vy = 0;
-        this.ball.platform = closestCrossoverPlatform;
+      if (closestCrossoverPlatform) {
+        // TODO: ugly ugly ugly fixme!
+        var tmpBall = {
+          x: x,
+          radius: this.ball.radius
+        };
+        if (this.isBallOnGap(tmpBall, closestCrossoverPlatform)) {
+          this.platformPassed += 1;
+        } else {
+          y = closestCrossoverPlatform.ypos;
+          vy = 0;
+          this.ball.platform = closestCrossoverPlatform;
+        }
       } else if (y > 1) {
         y = 1;
         vy = 0;
@@ -220,6 +237,7 @@ Falldown.GameState.prototype = {
     this.ball.vy = vy;
   },
 
+  // TODO: This method needs to be reworked
   isBallOnGap: function(ball, platform) {
     var ballMinX = ball.x - ball.radius;
     var ballMaxX = ball.x + ball.radius;
