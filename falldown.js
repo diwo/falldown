@@ -13,15 +13,11 @@ Falldown.prototype = {
   init: function() {
     var canvas = document.getElementById('canvas');
 
+    this.gameState = new Falldown.GameState();
     this.renderer = new Falldown.Renderer(canvas);
     this.input = new Falldown.Input(canvas);
 
-    this.reset();
     this.gameLoop();
-  },
-
-  reset: function() {
-    this.gameState = new Falldown.GameState();
   },
 
   gameLoop: function(timestamp) {

@@ -3,22 +3,33 @@
 'use strict';
 
 Falldown.GameState = function() {
-  this.state = Falldown.GameState.State.TITLE;
-  this.fps = 0;
-  this.platforms = [];
+  this.state = null;
+  this.fps = null;
+  this.platforms = null;
   this.topPlatform = null;
   this.bottomPlatform = null;
-  this.ball = {
-    x: 0.5,
-    vx: 0,
-    y: 0,
-    vy: 0,
-    radius: 1/30,
-    platform: null
-  };
+  this.ball = null;
+
+  this.reset();
 };
 
 Falldown.GameState.prototype = {
+  reset: function() {
+    this.state = Falldown.GameState.State.TITLE;
+    this.fps = 0;
+    this.platforms = [];
+    this.topPlatform = null;
+    this.bottomPlatform = null;
+    this.ball = {
+      x: 0.5,  // x center
+      y: 0,    // y bottom
+      vx: 0,
+      vy: 0,
+      radius: 1/30,
+      platform: null
+    };
+  },
+
   update: function(deltaTime, inputData) {
     this.updateFps(deltaTime);
 
@@ -28,6 +39,10 @@ Falldown.GameState.prototype = {
       }
     } else if (this.state === Falldown.GameState.State.PLAYING) {
       this.updateGame(deltaTime, inputData);
+    } else if (this.state === Falldown.GameState.State.GAMEOVER) {
+      if (inputData.tapped) {
+        this.reset();
+      }
     }
   },
 
@@ -60,7 +75,7 @@ Falldown.GameState.prototype = {
       // delete old platforms
       if (platform.ypos < -0.05) {
         if (this.ball.platform === platform) {
-          // game over
+          this.state = Falldown.GameState.State.GAMEOVER;
         }
         this.platforms.splice(platformIndex, 1);
       }
@@ -79,7 +94,7 @@ Falldown.GameState.prototype = {
 
   generatePlatform: function() {
     var platform = {
-      ypos: 1.0,
+      ypos: 1.0,  // position of top edge
       gaps: []
     };
 
@@ -122,6 +137,7 @@ Falldown.GameState.prototype = {
     var reverseMultiplier = 3;
     var maxAngle = Math.PI/4;
 
+    // derive x/y acceleration components from tilt input
     var tiltRadian = (inputData.tilt || 0) * maxAngle;
     var dvx = gravity * Math.sin(tiltRadian) * deltaTime/1000;
     var dvy = gravity * Math.cos(tiltRadian) * deltaTime/1000;
@@ -129,18 +145,21 @@ Falldown.GameState.prototype = {
       dvx *= reverseMultiplier;
     }
 
+    // adjust velocity
     var vx = this.ball.vx + dvx;
     var vy = this.ball.vy + dvy;
 
+    // limit velocity to upperbound
     var vdiag = Math.sqrt(vx*vx + vy*vy);
     if (vdiag > vterm) {
       vx = vx * vterm / vdiag;
       vy = vy * vterm / vdiag;
     }
 
-    var x = this.ball.x + vx * deltaTime/1000;
-    var y = this.ball.y + vy * deltaTime/1000;
+    // calculate new position from velocity
 
+    var x = this.ball.x + vx * deltaTime/1000;
+    // limit ball position to screen boundaries
     if (x + this.ball.radius > 1) {
       x = 1 - this.ball.radius;
       vx = 0;
@@ -149,9 +168,17 @@ Falldown.GameState.prototype = {
       vx = 0;
     }
 
-    if (y + this.ball.radius > 1) {
-      y = 1 - this.ball.radius;
+    var y;
+    // raise ball with platform if it's on one
+    if (this.ball.platform) {
+      y = this.ball.platform.ypos;
       vy = 0;
+    } else {
+      y = this.ball.y + vy * deltaTime/1000;
+      if (y > 1) {
+        y = 1;
+        vy = 0;
+      }
     }
 
     this.ball.x = x;
@@ -164,6 +191,6 @@ Falldown.GameState.prototype = {
 Falldown.GameState.State = {
   TITLE: 0,
   PLAYING: 1,
-  PAUSED: 2
+  GAMEOVER: 2
 };
 

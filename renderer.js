@@ -50,8 +50,8 @@ Falldown.Renderer.prototype = {
       this.drawTitle();
     } else if (gameState.state === Falldown.GameState.State.PLAYING) {
       this.drawPlaying(gameState);
-    } else if (gameState.state === Falldown.GameState.State.PAUSED) {
-      this.drawPaused(gameState);
+    } else if (gameState.state === Falldown.GameState.State.GAMEOVER) {
+      this.drawGameover();
     }
 
     this.drawFps(gameState.fps);
@@ -170,7 +170,7 @@ Falldown.Renderer.prototype = {
 
       ctx.beginPath();
       ctx.arc(renderer.viewport.width * gameState.ball.x,
-              renderer.viewport.height * gameState.ball.y,
+              renderer.viewport.height * gameState.ball.y - renderer.viewport.width * gameState.ball.radius,
               renderer.viewport.width * gameState.ball.radius,
               0, Math.PI*2, false);
       ctx.fill();
@@ -180,7 +180,39 @@ Falldown.Renderer.prototype = {
     })();
   },
 
-  drawPaused: function(/* gameState */) {
+  drawGameover: function() {
+    var renderer = this;
+    var ctx = renderer.context;
+
     this.clearScreen();
+
+    (function drawGameover() {
+      ctx.save();
+
+      ctx.font = '72pt "Arial Black"';
+      ctx.fillStyle = '#FF0000';
+      ctx.strokeStyle = '#EE0000';
+      ctx.lineWidth = 5;
+      ctx.textAlign = 'center';
+
+      var gameoverMsg = 'Game Over';
+      ctx.fillText(gameoverMsg, renderer.viewport.width/2, renderer.viewport.height/3);
+      ctx.strokeText(gameoverMsg, renderer.viewport.width/2, renderer.viewport.height/3);
+
+      ctx.restore();
+    })();
+
+    (function drawTaunt() {
+      ctx.save();
+
+      ctx.font = '24pt Arial';
+      ctx.fillStyle = 'black';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      ctx.fillText('You suck', renderer.viewport.width/2, renderer.viewport.height/3 + 20);
+
+      ctx.restore();
+    })();
   }
 };
