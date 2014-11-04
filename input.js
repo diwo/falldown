@@ -14,7 +14,9 @@ Falldown.Input.prototype = {
     var input = this;
 
     window.addEventListener('deviceorientation', function(event) {
-      input.tilt = event.gamma;
+      // TODO: refactor magic number
+      var maxTilt = 45;
+      input.tilt = Math.min(maxTilt, Math.abs(event.gamma)) * (event.gamma > 0 ? 1 : -1) / maxTilt;
     }, false);
 
     canvas.addEventListener('touchstart', function() {
@@ -25,14 +27,14 @@ Falldown.Input.prototype = {
   },
 
   poll: function() {
-    var state = {
+    var inputData = {
       tilt: this.tilt,
       tapped: this.tapped
     };
 
     this.reset();
 
-    return state;
+    return inputData;
   },
 
   reset: function() {

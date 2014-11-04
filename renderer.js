@@ -162,6 +162,22 @@ Falldown.Renderer.prototype = {
       }
       ctx.restore();
     })();
+
+    (function drawBall() {
+      ctx.save();
+      ctx.fillStyle = '#FF0000';
+      ctx.lineWidth = 5;
+
+      ctx.beginPath();
+      ctx.arc(renderer.viewport.width * gameState.ball.x,
+              renderer.viewport.height * gameState.ball.y,
+              renderer.viewport.width * gameState.ball.radius,
+              0, Math.PI*2, false);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    })();
   },
 
   drawPaused: function(/* gameState */) {

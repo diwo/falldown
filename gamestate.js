@@ -4,15 +4,16 @@
 
 Falldown.GameState = function() {
   this.state = Falldown.GameState.State.TITLE;
-  this.fps = null;
+  this.fps = 0;
   this.platforms = [];
   this.topPlatform = null;
   this.bottomPlatform = null;
   this.ball = {
-    x: null,
-    dx: 0,
-    y: null,
-    dy: 0,
+    x: 0.5,
+    vx: 0,
+    y: 0,
+    vy: 0,
+    radius: 1/30,
     platform: null
   };
 };
@@ -31,18 +32,17 @@ Falldown.GameState.prototype = {
   },
 
   updateFps: function(deltaTime) {
-    var lastFps = this.fps || 0;
     var currentFps = 0;
     if (deltaTime) {
       currentFps = 1000 / deltaTime;
     }
 
-    this.fps = currentFps * 0.9 + lastFps * 0.1;
+    this.fps = currentFps * 0.9 + this.fps * 0.1;
   },
 
   updateGame: function(deltaTime, inputData) {
     this.updatePlatforms(deltaTime);
-    this.moveBall(inputData);
+    this.moveBall(deltaTime, inputData);
   },
 
   updatePlatforms: function(deltaTime) {
@@ -58,7 +58,7 @@ Falldown.GameState.prototype = {
       platform.ypos -= platformSpeed * deltaTime / 1000;
 
       // delete old platforms
-      if (platform.ypos < 0) {
+      if (platform.ypos < -0.05) {
         if (this.ball.platform === platform) {
           // game over
         }
@@ -84,7 +84,7 @@ Falldown.GameState.prototype = {
     };
 
     // TODO: refactor magic numbers
-    var platformQuantizationSize = 8;
+    var platformQuantizationSize = 10;
     var minNumberOfGaps = 1;
     var maxNumberOfGaps = 3;
     var numberOfGaps = Math.floor(Math.random() * (maxNumberOfGaps - minNumberOfGaps)) + minNumberOfGaps;
@@ -113,7 +113,52 @@ Falldown.GameState.prototype = {
     return platform;
   },
 
-  moveBall: function() {}
+  moveBall: function(deltaTime, inputData) {
+    // TODO: refactor magic numbers
+    // fraction of screen height per second
+    var vterm = 1.2;
+    // fraction of screen height per second per second
+    var gravity = vterm / 0.3;
+    var reverseMultiplier = 3;
+    var maxAngle = Math.PI/4;
+
+    var tiltRadian = (inputData.tilt || 0) * maxAngle;
+    var dvx = gravity * Math.sin(tiltRadian) * deltaTime/1000;
+    var dvy = gravity * Math.cos(tiltRadian) * deltaTime/1000;
+    if (dvx * this.ball.vx < 0) {
+      dvx *= reverseMultiplier;
+    }
+
+    var vx = this.ball.vx + dvx;
+    var vy = this.ball.vy + dvy;
+
+    var vdiag = Math.sqrt(vx*vx + vy*vy);
+    if (vdiag > vterm) {
+      vx = vx * vterm / vdiag;
+      vy = vy * vterm / vdiag;
+    }
+
+    var x = this.ball.x + vx * deltaTime/1000;
+    var y = this.ball.y + vy * deltaTime/1000;
+
+    if (x + this.ball.radius > 1) {
+      x = 1 - this.ball.radius;
+      vx = 0;
+    } else if (x - this.ball.radius < 0) {
+      x = this.ball.radius;
+      vx = 0;
+    }
+
+    if (y + this.ball.radius > 1) {
+      y = 1 - this.ball.radius;
+      vy = 0;
+    }
+
+    this.ball.x = x;
+    this.ball.y = y;
+    this.ball.vx = vx;
+    this.ball.vy = vy;
+  }
 };
 
 Falldown.GameState.State = {
