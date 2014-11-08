@@ -73,7 +73,7 @@ Falldown.GameState.prototype = {
       // TODO: refactor this number
       // fraction of screen height per second
       var platformSpeed = 0.3;
-      platformSpeed += 0.1 * this.platformPassed/50;
+      platformSpeed += 0.03 * Math.log(1 + this.platformPassed/20);
 
       // move existing platforms up
       var newYpos = platform.ypos - platformSpeed * deltaTime / 1000;
@@ -101,10 +101,10 @@ Falldown.GameState.prototype = {
     // create new platform
     // TODO: refactor this number
     // fraction of screen height
-    var spaceBetweenPlatforms = 0.25;
-    spaceBetweenPlatforms -= 0.02 * this.platformPassed / 50;
+    var spaceBetweenPlatforms = 0.35;
+    spaceBetweenPlatforms -= 0.05 * Math.log(1 + this.platformPassed/20);
 
-    if (!this.bottomPlatform || this.bottomPlatform.ypos + spaceBetweenPlatforms < 1) {
+    if (!this.bottomPlatform || this.bottomPlatform.ypos < 1 - spaceBetweenPlatforms) {
       var newPlatform = this.generatePlatform();
       this.platforms.push(newPlatform);
       this.bottomPlatform = newPlatform;
